@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#0a0a0d">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <title>MAX Block — установка профиля</title>
+    <link rel="apple-touch-icon" href="max-icon.png">
+    <link rel="icon" href="max-icon.png" type="image/png">
+    <style>
+        :root { color-scheme: dark; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { min-height: 100%; background: #0a0a0d; }
+        body {
+            min-height: 100vh;
+            min-height: 100dvh;
+            display: grid;
+            place-items: center;
+            padding: 24px;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+            color: #eceaf1;
+            text-align: center;
+            -webkit-font-smoothing: antialiased;
+        }
+        .wrap { width: 100%; max-width: 320px; }
+        .mark {
+            width: 84px;
+            height: 84px;
+            margin: 0 auto 20px;
+            position: relative;
+        }
+        .mark img {
+            display: block;
+            width: 100%;
+            height: 100%;
+            border-radius: 19px;
+        }
+        .mark svg {
+            position: absolute;
+            inset: -8px;
+            width: calc(100% + 16px);
+            height: calc(100% + 16px);
+            pointer-events: none;
+        }
+        h1 {
+            font-size: 24px;
+            font-weight: 700;
+            letter-spacing: -.02em;
+        }
+        p {
+            margin-top: 8px;
+            font-size: 14px;
+            line-height: 1.5;
+            color: #9a94a6;
+        }
+        .btn {
+            display: none;
+            margin-top: 22px;
+            padding: 14px 18px;
+            border-radius: 12px;
+            background: #7c3aed;
+            color: #fff;
+            font-size: 15px;
+            font-weight: 650;
+            text-decoration: none;
+        }
+        .btn.show { display: block; }
+        .hint {
+            margin-top: 10px;
+            font-size: 11.5px;
+            color: #67616f;
+        }
+    </style>
+</head>
+<body>
+    <div class="wrap">
+        <div class="mark" role="img" aria-label="MAX заблокирован">
+            <img src="max-icon.png" alt="">
+            <svg viewBox="0 0 100 100" aria-hidden="true">
+                <path d="M14 14 L86 86 M86 14 L14 86" fill="none" stroke="#0a0a0d" stroke-width="15" stroke-linecap="round"/>
+                <path d="M14 14 L86 86 M86 14 L14 86" fill="none" stroke="#ff453a" stroke-width="8.5" stroke-linecap="round"/>
+            </svg>
+        </div>
+        <h1>MAX Block</h1>
+        <p id="status">Готовим профиль…</p>
+        <a class="btn" id="install" href="max-block.mobileconfig?v=1">Установить профиль</a>
+        <p class="hint" id="hint" hidden>Если окно установки не появилось — нажмите кнопку.</p>
+    </div>
+
+    <script>
+    (function () {
+        var status = document.getElementById('status');
+        var button = document.getElementById('install');
+        var hint = document.getElementById('hint');
+        var profile = 'max-block.mobileconfig?v=1';
+        var navigated = false;
+
+        function showManual() {
+            if (document.visibilityState !== 'visible') return;
+            status.textContent = 'Профиль готов к установке';
+            button.classList.add('show');
+            hint.hidden = false;
+        }
+
+        function install() {
+            if (navigated) return;
+            navigated = true;
+            location.replace(profile);
+        }
+
+        if (!('serviceWorker' in navigator)) {
+            install();
+            setTimeout(showManual, 3000);
+            return;
+        }
+
+        navigator.serviceWorker.register('sw.js').then(function () {
+            if (navigator.serviceWorker.controller) {
+                install();
+                return;
+            }
+
+            var done = false;
+            function once() {
+                if (done) return;
+                done = true;
+                install();
+            }
+
+            navigator.serviceWorker.addEventListener('controllerchange', once);
+            navigator.serviceWorker.ready.then(function () {
+                if (navigator.serviceWorker.controller) once();
+            });
+            setTimeout(once, 2500);
+            setTimeout(showManual, 4000);
+        }).catch(function () {
+            status.textContent = 'Не удалось подготовить установку';
+            button.classList.add('show');
+            hint.hidden = false;
+        });
+    })();
+    </script>
+</body>
+</html>
